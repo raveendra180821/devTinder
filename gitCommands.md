@@ -29,3 +29,8 @@
 -> To check all the commits
     > git log 
     > git log --oneline 
+
+-> To stop tracking any file (ex: database.js file)
+    > git rm --cached src/config/database.js (--cached → removes the file from Git tracking, but keeps it locally (so it’s not deleted from yourcomputer)
+    > git commit -m "Stop tracking database.js and add to .gitignore"
+    > git push
