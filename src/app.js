@@ -7,35 +7,38 @@ const app = express();
 
 app.use(express.json());
 
+function validateReqBody(req) {
+  const isValidBody =
+    req.body &&
+    typeof req.body === "object" &&
+    Object.keys(req.body).length !== 0;
+
+  if (isValidBody) {
+    return req.body;
+  }
+  throw new Error("invalid body");
+}
+
 app.post("/signup", async (req, res) => {
-  const body = req.body;
-  console.log(body);
+  try {
+    const data = validateReqBody(req);
 
-  const user = new User(body);
-
-  if (!body) {
-    res.status(400).send("request body is empty");
-  } else {
-    try {
-      await user.save();
-      res.send("User Saved Successfully !");
-    } catch (err) {
-      
-      const errName = err.name;
-      let value = {}
-      for (key in err.errors){
-        value[key] = err.errors[key].message
-      }
-      
-      res.status(400).send({[errName]: value});
-      //res.status(400).send(err);
+    if ((await User.find({ email: data.email })).length !== 0) {
+      res.status(400).send("user already exist with this emai");
     }
+
+    const user = await User.create(data);
+
+    res.send("user created successfully with");
+  } catch (err) {
+    res.status(400).send(err.message);
   }
 });
 
 app.get("/user", async (req, res) => {
   try {
-    const email = req.body.email;
+    const data = validateReqBody(req);
+    const email = data.email;
     const users = await User.find({ email });
 
     if (users.length === 0) {
@@ -50,7 +53,8 @@ app.get("/user", async (req, res) => {
 
 app.delete("/user", async (req, res) => {
   try {
-    const userId = req.body.userId;
+    const data = validateReqBody(req);
+    const userId = data.id;
     const user = await User.findByIdAndDelete(userId);
     console.log(user);
     if (!user) {
@@ -59,7 +63,28 @@ app.delete("/user", async (req, res) => {
       res.send("user deleted successfully !");
     }
   } catch (err) {
-    res.status(400).send("Something went wrong:   " + err.name);
+    res.status(400).send("Something went wrong:   " + err.message);
+  }
+});
+
+app.patch("/user", async (req, res) => {
+  try {
+    const data = validateReqBody(req);
+    const userId = data.id;
+
+    const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+
+    console.log(data);
+    if (!updatedUser) {
+      res.status(400).send("user not found with the given userId");
+    } else {
+      res.send("user updated successfully");
+    }
+  } catch (err) {
+    res.status(400).send(err.message);
   }
 });
 

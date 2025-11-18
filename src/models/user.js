@@ -1,53 +1,57 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
-const {Schema} = mongoose;
-
+const { Schema } = mongoose;
 
 const userSchema = new Schema({
-    firstName: {
-        type: String,
-        minLength: 2,
-        maxLength: 20,
-        trim: true,
-        required: [true, "firstName is required"]
+  firstName: {
+    type: String,
+    minlength: 2,
+    maxlength: 20,
+    trim: true,
+    required: [true, "firstName is required"],
+  },
+  lastName: {
+    type: String,
+    minlength: 2,
+    maxlength: 20,
+    trim: true,
+  },
+  email: {
+    type: String,
+    lowercase: true,
+    required: [true, "Email is required"],
+    validate: function (v){
+      if (!validator.isEmail(v)){
+        throw new Error("Invalid Email address")
+      }else{
+        return true
+      }
+
     },
-    lastName: {
-        type: String,
-        minLength: 2,
-        maxLength: 20,
-        trim: true
-    },
-    email: {
-        type: String,
-        lowerCase: true,
-        unique: true,
-        required: [true, "Email is required"]
-    },
-    password: {
-        type: String,
-        trim: true,
-        required: [true, "password is required"],
-        validate: [
-            {
-                validator: v => v.length >= 8,
-                message: "Password must be atleast 8 characters long"
-            },
-            {
-                validator: v => /[A-Z]/.test(v),
-                message: "Password must contain at least one uppercase letter"
-            }
-        ]
-    },
-    age: {
-        type: Number,
-        min: 18,
-        required: [true, "Age is required"]
-    },
-    gender: {
-        type: String,
-        enum: ["male", "female", "other"]
+    trim: true
+  },
+  password: {
+    type: String,
+    trim: true,
+    required: [true, "password is required"],
+    validate: function(v){
+      
     }
-})
+  },
+  age: {
+    type: Number,
+    trim: true,
+    min: 18,
+    required: [true, "Age is required"],
+  },
+  gender: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    enum: ["male", "female", "other"],
+    required: [true, "Gender is required"],
+  },
+});
 
 module.exports = mongoose.model("User", userSchema);
-
