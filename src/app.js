@@ -1,33 +1,41 @@
 const express = require("express");
 const connectDB = require("./configs/database");
 const User = require("./models/user");
-const user = require("./models/user");
+const userSchemaObject = require("./models/userSchema");
 
 const app = express();
 
 app.use(express.json());
 
-function validateReqBody(req) {
+function validateReqBody(req, res, next) {
   const isValidBody =
     req.body &&
     typeof req.body === "object" &&
     Object.keys(req.body).length !== 0;
 
-  if (isValidBody) {
-    return req.body;
+  if (!isValidBody) {
+    return res.status(400).send("invalid request - body should not be empty");
+  }else if (isValidBody){
+    const  allowedFields = Object.keys(userSchemaObject)
+    console.log(allowedFields)
+    return res.send("success")
   }
-  throw new Error("invalid body");
+
+  next();
 }
 
-app.post("/signup", async (req, res) => {
+app.post("/signup", validateReqBody, async (req, res) => {
+  const data = req.body;
+  const email = data.email?.trim();
   try {
-    const data = validateReqBody(req);
+    const isEmailAlreadyExist = !!(await User.findOne({ email })); // if no records with the given email findOne() will return `null`
 
-    if ((await User.find({ email: data.email })).length !== 0) {
-      res.status(400).send("user already exist with this emai");
+    if (isEmailAlreadyExist) {
+      return res.status(400).send("user already exist with this email");
     }
 
     const user = await User.create(data);
+    console.log(user);
 
     res.send("user created successfully with");
   } catch (err) {
@@ -67,14 +75,15 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:id", async (req, res) => {
   try {
     const data = validateReqBody(req);
-    const userId = data.id;
-
+    const userId = req.params.id;
+    //console.log(userId)
     const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
       runValidators: true,
+      strict: "throw",
     });
 
     console.log(data);
