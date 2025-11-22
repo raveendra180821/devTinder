@@ -1,7 +1,7 @@
 const express = require("express");
 const connectDB = require("./configs/database");
 const User = require("./models/user");
-const userSchemaObject = require("./models/userSchema");
+const userSchemaObject = require("./models/userSchemaObject");
 
 const app = express();
 
@@ -14,40 +14,74 @@ function validateReqBody(req, res, next) {
     Object.keys(req.body).length !== 0;
 
   if (!isValidBody) {
-    return res.status(400).send("invalid request - body should not be empty");
-  }else if (isValidBody){
-    const  allowedFields = Object.keys(userSchemaObject)
-    console.log(allowedFields)
-    return res.send("success")
+    return res.status(400).send("Invalid request - body should not be empty");
   }
+  const allowedFields = Object.keys(userSchemaObject);
+  const reqBodyFields = Object.keys(req.body);
+  const invalidFields = reqBodyFields.filter(
+    (field) => !allowedFields.includes(field)
+  );
 
+  if (!(invalidFields.length === 0)) {
+    return res.send("Invalid key: " + invalidFields[0]);
+  }
   next();
 }
 
-app.post("/signup", validateReqBody, async (req, res) => {
-  const data = req.body;
-  const email = data.email?.trim();
-  try {
-    const isEmailAlreadyExist = !!(await User.findOne({ email })); // if no records with the given email findOne() will return `null`
+async function checkIsEmailAlreadyExist(req, res, next) {
+  const email = req?.body?.email?.trim() ?? "";
+  const isEmailExist = !!(await User.findOne({ email })); // if no records with the given email findOne() will return `null`
 
-    if (isEmailAlreadyExist) {
-      return res.status(400).send("user already exist with this email");
-    }
-
-    const user = await User.create(data);
-    console.log(user);
-
-    res.send("user created successfully with");
-  } catch (err) {
-    res.status(400).send(err.message);
+  if (isEmailExist) {
+    return res.status(400).send("user already exist with this email");
   }
-});
+  next();
+}
 
-app.get("/user", async (req, res) => {
+async function validateUser(req, res, next) {
+  console.log(req);
   try {
-    const data = validateReqBody(req);
-    const email = data.email;
-    const users = await User.find({ email });
+    const userId = req?.params?.id ?? "";
+    console.log("userId: " + userId);
+
+    const isUserExist = !!(await User.findById(userId)); // if userId is empty or no user exist with userId - findById will return `null`
+
+    if (!isUserExist) {
+      return res
+        .status(400)
+        .send(`Can not ${req.method} - user not exist with Id: ` + userId);
+    }
+    next();
+  } catch (err) {
+    if (err.name === "CastError") {
+      return res.status(400).send(`Can not ${req.method} - Invalid user Id`);
+    }
+  }
+}
+
+app.post(
+  "/signup",
+  validateReqBody,
+  checkIsEmailAlreadyExist,
+  async (req, res) => {
+    const data = req.body;
+
+    try {
+      //creating new document into users collection under devTinder DB
+      const user = await User.create(data);
+      console.log(user);
+
+      res.send("user created successfully with");
+    } catch (err) {
+      res.status(400).send(err.message);
+    }
+  }
+);
+
+app.get("/user/:email", async (req, res) => {
+  try {
+    const email = req?.params?.email ?? "";
+    const users = await User.find({ email }); // if email is empty or no record exist with the email, find() will returns []
 
     if (users.length === 0) {
       res.status(404).send("User not found !");
@@ -59,43 +93,42 @@ app.get("/user", async (req, res) => {
   }
 });
 
-app.delete("/user", async (req, res) => {
+app.delete("/user/:id", validateUser, async (req, res) => {
   try {
-    const data = validateReqBody(req);
-    const userId = data.id;
-    const user = await User.findByIdAndDelete(userId);
-    console.log(user);
-    if (!user) {
-      res.status(404).send("user not exist with entered userId");
-    } else {
-      res.send("user deleted successfully !");
-    }
+    const userId = req?.params?.id ?? "";
+    await User.findByIdAndDelete(userId);
+    res.send("user deleted successfully !");
   } catch (err) {
     res.status(400).send("Something went wrong:   " + err.message);
   }
 });
 
-app.patch("/user/:id", async (req, res) => {
-  try {
-    const data = validateReqBody(req);
-    const userId = req.params.id;
-    //console.log(userId)
-    const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data, {
-      returnDocument: "after",
-      runValidators: true,
-      strict: "throw",
-    });
+app.patch(
+  "/user/:id",
+  validateReqBody,
+  validateUser,
+  checkIsEmailAlreadyExist,
+  async (req, res) => {
+    try {
+      const data = req.body;
+      const userId = req.params.id;
+      const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data, {
+        returnDocument: "after",
+        runValidators: true,
+        strict: "throw",
+      });
 
-    console.log(data);
-    if (!updatedUser) {
-      res.status(400).send("user not found with the given userId");
-    } else {
-      res.send("user updated successfully");
+      console.log(data);
+      if (!updatedUser) {
+        res.status(400).send("user not found with the given userId");
+      } else {
+        res.send("user updated successfully");
+      }
+    } catch (err) {
+      res.status(400).send(err.message);
     }
-  } catch (err) {
-    res.status(400).send(err.message);
   }
-});
+);
 
 connectDB()
   .then(() => {

@@ -1,3 +1,5 @@
+const validator = require("validator");
+
 const userSchemaObject = {
   firstName: {
     type: String,
