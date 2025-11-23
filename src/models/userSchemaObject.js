@@ -45,7 +45,7 @@ const userSchemaObject = {
         message: "Password must be contains atleast 1 number",
       },
       {
-        validator: (v) => /[A-Za-z0-9]/.test(v),
+        validator: (v) => /[^A-Za-z0-9]/.test(v),
         message: "Password must be contains a symbol",
       },
       {
