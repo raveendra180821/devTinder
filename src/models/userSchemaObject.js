@@ -43,7 +43,10 @@ const userSchemaObject = {
     type: String,
     trim: true,
     lowercase: true,
-    enum: ["male", "female", "other"],
+    enum: {
+      values: ["male", "female", "other"],
+      message: "{VALUE} is not valid gender"
+    },
     required: [true, "Gender is required"],
   },
   skills: {
