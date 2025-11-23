@@ -31,7 +31,28 @@ const userSchemaObject = {
     type: String,
     trim: true,
     required: [true, "password is required"],
-    validate: function (v) {},
+    validate: [
+      {
+        validator: (v) => /[A-Z]/.test(v),
+        message: "Password must be contains atleast 1 uppercase letter",
+      },
+      {
+        validator: (v) => /[a-z]/.test(v),
+        message: "Password must be contains atleast 1 lowercase letter",
+      },
+      {
+        validator: (v) => /[0-9]/.test(v),
+        message: "Password must be contains atleast 1 number",
+      },
+      {
+        validator: (v) => /[A-Za-z0-9]/.test(v),
+        message: "Password must be contains a symbol",
+      },
+      {
+        validator: (v) => v.length > 8,
+        message: "Password should be minimum 8 characters length",
+      },
+    ],
   },
   age: {
     type: Number,
@@ -45,7 +66,7 @@ const userSchemaObject = {
     lowercase: true,
     enum: {
       values: ["male", "female", "other"],
-      message: "{VALUE} is not valid gender"
+      message: "{VALUE} is not valid gender",
     },
     required: [true, "Gender is required"],
   },
