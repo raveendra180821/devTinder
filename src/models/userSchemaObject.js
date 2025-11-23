@@ -10,7 +10,7 @@ const userSchemaObject = {
   },
   lastName: {
     type: String,
-    minlength: 2,
+    minlength: 1,
     maxlength: 20,
     trim: true,
   },
