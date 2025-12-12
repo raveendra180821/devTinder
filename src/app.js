@@ -1,4 +1,5 @@
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./configs/database");
 const User = require("./models/user");
 const {
@@ -12,6 +13,7 @@ const bcrypt = require("bcrypt");
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -51,7 +53,7 @@ app.post("/login", async (req, res) => {
     }
 
     // get the user from DB using email
-    const user = await User.findOne({ email }).select("password");
+    const user = await User.findOne({ email }).select("_id password");
     console.log(user);
 
     if (user === null) {
@@ -65,7 +67,24 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       throw new Error("Invalid credentials");
     } else {
+      // send token in response via cookies
+      res.cookie("token", "wehjid65twhbf4738wdfgwju346yewhbdg2u3eyregj");
+
       res.send("login successfull !!!");
+    }
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+    if (Object.keys(cookies).length === 0) {
+      throw new Error("ERROR: Cookie not found");
+    } else {
+      const {token} = cookies
+      res.send("reading cookie!");
     }
   } catch (err) {
     res.status(400).send(err.message);
