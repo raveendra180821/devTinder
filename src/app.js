@@ -9,6 +9,7 @@ const {
   validatePassword,
 } = require("./utils/validations");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken")
 
 const app = express();
 
@@ -68,9 +69,10 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid credentials");
     } else {
       // send token in response via cookies
-      res.cookie("token", "wehjid65twhbf4738wdfgwju346yewhbdg2u3eyregj");
+      const token = jwt.sign({id: user._id}, "Ravi@G12%")
+      res.cookie("token", token);
 
-      res.send("login successfull !!!");
+      res.send("login successfull !!!");  
     }
   } catch (err) {
     res.status(400).send(err.message);
@@ -84,6 +86,8 @@ app.get("/profile", async (req, res) => {
       throw new Error("ERROR: Cookie not found");
     } else {
       const {token} = cookies
+      const decodedToken = jwt.verify(token, "Ravi@G12%")
+      console.log(decodedToken)
       res.send("reading cookie!");
     }
   } catch (err) {
