@@ -2,14 +2,9 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./configs/database");
 const User = require("./models/user");
-const {
-  validateReqBody,
-  validateEmail,
-  validateUser,
-  validatePassword,
-} = require("./utils/validations");
+const { userAuth } = require("./utils/validations");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -18,15 +13,6 @@ app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
-    //validating the req body
-    validateReqBody(req);
-
-    //checking whether email is already exist
-    await validateEmail(req);
-
-    const password = req?.body?.password ?? "";
-    validatePassword(password);
-
     // encrypt the password using bcrypt package
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log(hashedPassword);
@@ -58,7 +44,7 @@ app.post("/login", async (req, res) => {
     console.log(user);
 
     if (user === null) {
-      throw new Error("Invalid credentials");
+      throw new Error("Invalid user");
     }
 
     // verify the password
@@ -69,10 +55,10 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid credentials");
     } else {
       // send token in response via cookies
-      const token = jwt.sign({id: user._id}, "Ravi@G12%")
+      const token = jwt.sign({ id: user._id }, "Ravi@G12%");
       res.cookie("token", token);
 
-      res.send("login successfull !!!");  
+      res.send("login successfull !!!");
     }
   } catch (err) {
     res.status(400).send(err.message);
@@ -82,67 +68,30 @@ app.post("/login", async (req, res) => {
 app.get("/profile", async (req, res) => {
   try {
     const cookies = req.cookies;
-    if (Object.keys(cookies).length === 0) {
-      throw new Error("ERROR: Cookie not found");
+    const { token } = cookies;
+
+    if (!token) {
+      throw new Error("ERROR: Token not found");
     } else {
-      const {token} = cookies
-      const decodedToken = jwt.verify(token, "Ravi@G12%")
-      console.log(decodedToken)
-      res.send("reading cookie!");
+      const decodedToken = jwt.verify(token, "Ravi@G12%");
+
+      const { id } = decodedToken;
+
+      const user = await User.findOne({ _id: id }).select(
+        "-createdAt -updatedAt -__v"
+      );
+      console.log(user);
+      res.send(user);
     }
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-app.get("/user/:email", async (req, res) => {
-  try {
-    const email = req?.params?.email ?? "";
-    const users = await User.find({ email }); // if email is empty or no record exist with the email, find() will returns []
+app.get("/sendConnectionReq", userAuth, async (req, res) => {
+  const {user} = req
 
-    if (users.length === 0) {
-      res.status(404).send("User not found !");
-    } else {
-      res.send(users);
-    }
-  } catch (err) {
-    res.status(400).send("Something went wrong - check req body");
-  }
-});
-
-app.delete("/user/:id", async (req, res) => {
-  try {
-    const userId = req?.params?.id ?? "";
-    await User.findByIdAndDelete(userId);
-    res.send("user deleted successfully !");
-  } catch (err) {
-    res.status(400).send("Something went wrong:   " + err.message);
-  }
-});
-
-app.patch("/user/:id", async (req, res) => {
-  try {
-    //validating the req body
-    validateReqBody(req);
-
-    //checking whether email is already exist
-    await validateEmail(req);
-
-    await validateUser(req);
-
-    const data = req.body;
-    const userId = req.params.id;
-    const updatedUser = await User.findByIdAndUpdate({ _id: userId }, data, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-
-    res.send("user updated successfully");
-  } catch (err) {
-    err.name === "CastError"
-      ? res.status(400).send(`Can not ${req.method} - Invalid user Id`)
-      : res.status(400).send(err.message);
-  }
+  res.send(user.firstName + " sent Connection Request");
 });
 
 connectDB()
