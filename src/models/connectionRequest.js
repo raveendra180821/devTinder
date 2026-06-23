@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 
 const connectionRequestSchema = new Schema(
   {
-    fromUser: {
+    fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
-    toUser: {
+    toUserId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
@@ -37,5 +37,6 @@ connectionRequestSchema.pre("save", function () {
     this.dateUpdated = new Date(Date.now());
   }
 });
+
 
 module.exports = mongoose.model("ConnectionRequest", connectionRequestSchema);
