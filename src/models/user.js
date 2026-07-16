@@ -41,6 +41,7 @@ userSchema.pre("save", function(){
   if(!this.isNew){
     this.dateUpdated = new Date(Date.now())
   }
+  next()
 })
 
 

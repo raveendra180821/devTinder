@@ -15,7 +15,7 @@ const connectionRequestSchema = new Schema(
     status: {
       type: String,
       enum: {
-        values: ["Interested", "Ignored", "Accepted", "Rejected"],
+        values: ["interested", "ignored", "accepted", "rejected"],
         message: "{VALUE} is not a valid status",
       },
       required: true,
@@ -33,10 +33,9 @@ const connectionRequestSchema = new Schema(
 );
 
 connectionRequestSchema.pre("save", function () {
-  if (!this.isNew){
-    this.dateUpdated = new Date(Date.now());
+  if (this.fromUserId.equals(this.toUserId)) {
+    throw new Error("You can not send request to yourself");
   }
 });
-
 
 module.exports = mongoose.model("ConnectionRequest", connectionRequestSchema);
