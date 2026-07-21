@@ -60,4 +60,36 @@ requestRouter.post(
   },
 );
 
+requestRouter.post(
+  "/req/review/:status/:reqId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user
+      const { status, reqId } = req.params
+
+      const allowedReviewRequestStatuses = ["accepted", "rejected"]
+      if (!(allowedReviewRequestStatuses.includes(status))) {
+        throw new Error(status + " is not allowed to review the request")
+      }
+
+      const connectionRequest = await ConnectionRequest.findOne({ _id: reqId, toUserId: loggedInUser._id, status: "interested" })
+      if (!connectionRequest) {
+        throw new Error("Invalid reqId, cannot accept or reject the request")
+      }
+
+      connectionRequest.status = status
+
+      await connectionRequest.save()
+
+      res.json({
+        message: "Request " + status,
+        data: connectionRequest
+      })
+    }
+    catch (e) {
+      res.status(400).send("ERROR: " + e.message)
+    }
+  })
+
 module.exports = requestRouter;

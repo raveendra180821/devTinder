@@ -10,15 +10,17 @@ authRouter.post('/signup', async (req, res) => {
     try{
         const body = req.body
         validateSignupData(body);
+        console.log("body validation done")
         
         const {email} = body
         await checkIsUserAlreadyExist(email)
+        console.log("verified email")
 
         const password = body.password
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const user = await User.create({...body, password: hashedPassword});
-        res.send(`${user.firstName} profile is created`);
+        res.send(`${user.firstName} your profile is created`);
     }catch(e){  
         res.status(400).send("ERROR: " + e.message)
     }

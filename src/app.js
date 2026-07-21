@@ -12,10 +12,12 @@ app.use(cookieParser());
 const authRouter = require('./routers/auth');
 const profileRouter = require('./routers/profile');
 const requestRouter = require('./routers/request');
+const userRouter = require('./routers/user');
 
 app.use('/', authRouter);
 app.use('/', profileRouter);
 app.use('/', requestRouter);
+app.use('/', userRouter)
 
 connectDB()
 .then(() => {
@@ -23,7 +25,7 @@ connectDB()
 })
 .then(() => {
     app.listen(3000, () => {
-        console.log("Server is up and running");
+        console.log("Server is up and running on port 3000");
     })
 })
 .catch((e) => {

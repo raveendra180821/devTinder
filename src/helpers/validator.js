@@ -22,26 +22,29 @@ const checkIsPasswordStrong = (password) => {
 const validateSignupData = (body) => {
     const bodyFields = Object.keys(body)
     const bodyLength = bodyFields.length
+
+    // checking whether recieved a valid fields from body
     const hasBodyValidFields = bodyFields.every((i) => {
         const validBodyFields = ["firstName", "lastName", "email", "password", "age", "gender"]
         return validBodyFields.includes(i)
     })
+    
     if (bodyLength === 0 || !hasBodyValidFields ) {
         throw new Error("Invalid request body")
     }
-    else if (body.firstName.length === 0){
+    else if (!bodyFields.includes("firstName") || body.firstName.length === 0){
         throw new Error("firstName is required")
     }
     else if (!(body.firstName.length >= 4)){
         throw new Error("firstName should be more than 5 characters")
     }
-    else if (body.lastName.length === 0){
+    else if (!bodyFields.includes("lastName") || body.lastName.length === 0){
         throw new Error("LastName is required")
     }
     else if (!(body.lastName.length >= 3)){
         throw new Error("LastName should be more than 5 characters")
     }
-    else if (body.password.length === 0){
+    else if (!bodyFields.includes("password") || body.password.length === 0){
         throw new Error("Password is required")
     }
     else if (body.password.length > 0) {

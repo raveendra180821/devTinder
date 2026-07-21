@@ -13,16 +13,18 @@ const userSchema = new Schema({
   },
   email: {
     type: String,
+    unique: true
   },
   password: {
-    type: String,
+    type: String
   },
   age: {
     type: Number,
   },
   gender: {
     type: String,
-    enum: ["Male", "Female", "Other"],
+    required: true,
+    enum: ["male", "female", "other"],
   },
   skills: {
     type: Array,
@@ -41,7 +43,6 @@ userSchema.pre("save", function(){
   if(!this.isNew){
     this.dateUpdated = new Date(Date.now())
   }
-  next()
 })
 
 
