@@ -4,6 +4,7 @@ const { userAuth } = require("../middlewares/auth");
 const {
   validateProfileEditData,
   checkIsPasswordStrong,
+  validateUpdatePasswordReqBody
 } = require("../helpers/validator");
 
 const profileRouter = express.Router();
@@ -37,8 +38,9 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
 profileRouter.patch("/profile/password", userAuth, async (req, res) => {
   try {
-    const {userCurrentInputPassword, userNewInputPassword} = req.body;
+    validateUpdatePasswordReqBody(req)
 
+    const { userCurrentInputPassword, userNewInputPassword } = req.body;
     const user = req.user;
 
     const isCurrentPasswordValid = await user.validatePassword(
@@ -53,7 +55,8 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
 
     const newPasswordHash = await bcrypt.hash(userNewInputPassword, 10);
     user.password = newPasswordHash;
-    await user.save()
+
+    await user.save({validateModifiedOnly: true})
 
     res.send("Password has been updated successfully !")
 

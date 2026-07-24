@@ -7,24 +7,48 @@ const { Schema } = mongoose;
 const userSchema = new Schema({
   firstName: {
     type: String,
+    required: [true, "First name is required"],
+    minLength: [3, "First name must be at least 3 characters long"],
+    maxLength: [20, "First name is longer than the maximum allowed length (20)"]
   },
   lastName: {
     type: String,
+    required: [true, "Last name is required"],
+    minLength: [2, "Last name must be at least 3 characters long"],
+    maxLength: [20, "Last name is longer than the maximum allowed length (20)"]
   },
   email: {
     type: String,
-    unique: true
+    unique: true,
+    required: [true, "Email is required"],
+    maxLength: [50, "Email is longer than the maximum allowed length (50)"],
+    validate: [
+      {
+        validator: (email) => (email.includes("@")),
+        message: "Email should contain '@'"
+      },
+      {
+        validator: (email) => (email.includes(".com")),
+        message: "Email should contain '.com'"
+      }
+    ]
   },
   password: {
-    type: String
+    type: String,
+    required: [true, "Password is required"],
   },
   age: {
     type: Number,
+    required: [true, "Age is required"],
+    min: [18, "You must be at least 18 years old"]
   },
   gender: {
     type: String,
-    required: true,
-    enum: ["male", "female", "other"],
+    lowercase: true,
+    enum: {
+      values: ["male", "female", "other"],
+      message: "'{VALUE}' is not a valid gender"
+    }
   },
   skills: {
     type: Array,
@@ -39,8 +63,8 @@ const userSchema = new Schema({
 });
 
 // Schema middleware
-userSchema.pre("save", function(){
-  if(!this.isNew){
+userSchema.pre("save", function () {
+  if (!this.isNew) {
     this.dateUpdated = new Date(Date.now())
   }
 })

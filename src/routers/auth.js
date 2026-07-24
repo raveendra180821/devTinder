@@ -2,36 +2,43 @@ const express = require('express');
 const bcrypt = require('bcrypt')
 
 const User = require('../models/user');
-const {validateSignupData, checkIsUserAlreadyExist} = require('../helpers/validator')
+const { validateSignupData, checkIsUserAlreadyExist } = require('../helpers/validator')
 
 const authRouter = express.Router();
 
 authRouter.post('/signup', async (req, res) => {
-    try{
+    try {
         const body = req.body
         validateSignupData(body);
-        console.log("body validation done")
-        
-        const {email} = body
+
+        const { email } = body
         await checkIsUserAlreadyExist(email)
-        console.log("verified email")
 
         const password = body.password
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        const user = await User.create({...body, password: hashedPassword});
+        const user = await User.create({ ...body, password: hashedPassword });
         res.send(`${user.firstName} your profile is created`);
-    }catch(e){  
-        res.status(400).send("ERROR: " + e.message)
+    } catch (e) {
+        if (e.name === "ValidationError") {
+            const errors = Object.values(e.errors).map(err => ({ field: err.path, message: err.message }))
+
+            return res.status(400).json({
+                message: e.name,
+                errors
+            })
+        }
+
+        res.status(400).json({message: e.message})
     }
 })
 
-authRouter.post('/login',  async (req, res) =>{
-    try{
-        const {email, password} = req.body
+authRouter.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body
 
-        const user = await User.findOne({email})
-        if (!user){
+        const user = await User.findOne({ email })
+        if (!user) {
             throw new Error("Invalid credentials")
         }
 
@@ -40,18 +47,18 @@ authRouter.post('/login',  async (req, res) =>{
         if (isPasswordValid) {
             const token = await user.getJWT()
 
-            res.cookie("token", token, {maxAge: 60 * 60 * 1000})
+            res.cookie("token", token, { maxAge: 60 * 60 * 1000 })
             res.send(user.firstName + ' logged in successfully');
-        }else{
+        } else {
             throw new Error("Invalid credentials")
         }
-    }catch(e){
+    } catch (e) {
         res.status(400).send("ERROR: " + e.message)
     }
 });
 
-authRouter.post('/logout', (req,res) => {
-    res.cookie('token', null, {expires: new Date(Date.now())})
+authRouter.post('/logout', (req, res) => {
+    res.cookie('token', null, { expires: new Date(Date.now()) })
     res.send("Logged out successfully !")
 })
 
