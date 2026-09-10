@@ -30,9 +30,17 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
     await loggedInUser.save();
 
-    res.send("You Profile updated successfully");
+    res.json({message: "You Profile updated successfully", user: loggedInUser});
   } catch (e) {
-    res.status(400).send("Error: " + e.message);
+    if (e.name === "ValidationError"){
+      const errors = Object.values(e.errors).map(err => ({field: err.path, message: err.message}))
+
+      return res.status(400).json({
+        message: e.name,
+        errors
+      })
+    }
+    res.status(400).json({message: e.message});
   }
 });
 

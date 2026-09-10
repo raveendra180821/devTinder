@@ -20,6 +20,7 @@ const userSchema = new Schema({
   email: {
     type: String,
     unique: true,
+    lowercase: true,
     required: [true, "Email is required"],
     maxLength: [50, "Email is longer than the maximum allowed length (50)"],
     validate: [
@@ -39,7 +40,6 @@ const userSchema = new Schema({
   },
   age: {
     type: Number,
-    required: [true, "Age is required"],
     min: [18, "You must be at least 18 years old"]
   },
   gender: {
@@ -52,6 +52,14 @@ const userSchema = new Schema({
   },
   skills: {
     type: Array,
+  },
+  photoUrl: {
+    type: String,
+    default: "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png"
+  },
+  about: {
+    type: String,
+    default: "Just getting started here!"
   },
   dateCreated: {
     type: Date,
@@ -74,7 +82,7 @@ userSchema.pre("save", function () {
 userSchema.methods.getJWT = async function () {
   const user = this;
   const token = await jwt.sign({ id: user._id }, "Ravi@123", {
-    expiresIn: "1h",
+    expiresIn: "8h",
   });
 
   return token;

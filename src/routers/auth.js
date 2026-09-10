@@ -18,7 +18,14 @@ authRouter.post('/signup', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const user = await User.create({ ...body, password: hashedPassword });
-        res.send(`${user.firstName} your profile is created`);
+
+        const token = await user.getJWT()
+
+        res.cookie("token", token, { maxAge: 8 * 60 * 60 * 1000 })
+        res.json({
+            message: "Profile created successfully !",
+            data: user
+        });
     } catch (e) {
         if (e.name === "ValidationError") {
             const errors = Object.values(e.errors).map(err => ({ field: err.path, message: err.message }))
@@ -29,7 +36,7 @@ authRouter.post('/signup', async (req, res) => {
             })
         }
 
-        res.status(400).json({message: e.message})
+        res.status(400).json({ message: e.message })
     }
 })
 
@@ -47,13 +54,16 @@ authRouter.post('/login', async (req, res) => {
         if (isPasswordValid) {
             const token = await user.getJWT()
 
-            res.cookie("token", token, { maxAge: 60 * 60 * 1000 })
-            res.send(user.firstName + ' logged in successfully');
+            res.cookie("token", token, { maxAge: 8 * 60 * 60 * 1000 })
+            res.json({
+                message: user.firstName + ' logged in successfully',
+                data: user
+            });
         } else {
             throw new Error("Invalid credentials")
         }
     } catch (e) {
-        res.status(400).send("ERROR: " + e.message)
+        res.status(400).json({ message: e.message })
     }
 });
 

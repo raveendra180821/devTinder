@@ -65,11 +65,11 @@ const checkIsUserAlreadyExist = async (userInputEmail) => {
 const validateProfileEditData = (req) => {
     const { body } = req
 
-    if (!body) {
+    if (!body || Object.keys(body).length === 0) {
         throw new Error('Invalid Edit Request')
     }
 
-    const allowedEditFields = ["firstName", "lastName", "email", "skills", "photoUrl"]
+    const allowedEditFields = ["firstName", "lastName", "email", "skills", "photoUrl", "about", "age", "gender"]
 
     for (let field in body) {
         if (allowedEditFields.includes(field)) {

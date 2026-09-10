@@ -1,12 +1,19 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser')
+const cores = require('cors')
 
 const connectDB = require('./config/db');
 
 const app = express();
 
-app.use(bodyParser.json());
+const corsOptions = {
+    origin: "http://localhost:5173",
+    methods: ["GET, PATCH", "POST"],
+    credentials: true
+}
+
+app.use(cores(corsOptions))
+app.use(express.json());
 app.use(cookieParser());
 
 const authRouter = require('./routers/auth');
