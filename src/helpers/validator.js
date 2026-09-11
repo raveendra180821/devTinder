@@ -69,7 +69,7 @@ const validateProfileEditData = (req) => {
         throw new Error('Invalid Edit Request')
     }
 
-    const allowedEditFields = ["firstName", "lastName", "email", "skills", "photoUrl", "about", "age", "gender"]
+    const allowedEditFields = ["firstName", "lastName", "email", "skills", "photoUrl", "about", "age", "gender", "designation", "companyName"]
 
     for (let field in body) {
         if (allowedEditFields.includes(field)) {

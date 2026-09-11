@@ -50,12 +50,18 @@ const userSchema = new Schema({
       message: "'{VALUE}' is not a valid gender"
     }
   },
+  companyName: {
+    type: String
+  },
+  designation: {
+    type: String
+  },
   skills: {
     type: Array,
   },
   photoUrl: {
     type: String,
-    default: "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png"
+    default: "https://t4.ftcdn.net/jpg/11/68/50/57/360_F_1168505794_IBCEiafsIrHFJ09e65P2vh5115C1XI7e.jpg"
   },
   about: {
     type: String,
